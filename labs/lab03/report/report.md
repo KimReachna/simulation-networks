@@ -1,7 +1,7 @@
 ---
 ## Front matter
 title: "Отчёт по лабораторной работе №3"
-subtitle: "Управляющие структуры"
+subtitle: "Измерение и тестирование пропускной способности сети. Воспроизводимый эксперимент"
 author: "Ким Реачна"
 
 ## Generic otions
@@ -65,63 +65,237 @@ header-includes:
 
 # Цель работы
 
-Основная цель работы — освоить применение циклов функций и сторонних для Julia пакетов для решения задач линейной алгебры и работы с матрицами.
+Основной целью работы является знакомство с инструментом для измерения пропускной способности сети в режиме реального времени — iPerf3, а также получение навыков проведения воспроизводимого эксперимента по измерению пропускной способности моделируемой сети в среде Mininet.
 
 # Выполнение лабораторной работы
 
-##   Циклы while и for
+1. Создание подкаталога и копирование скрипта lab_iperf3_topo.py для запуска моделирования, затем изменение скрипта для вывода отображаемой информации о хосте, IP-адресе и MAC-адресе:
 
-Синтаксис ```while```:
+![Создание подкаталога и копирование скрипта lab_iperf3_topo.py](image/5.png){width=80% height=80%}
 
-```julia
-while <условие>
-    <тело цикла>
-end
-```
-Синтаксис ```for```:
+![Скрипт lab_iperf3_topo.py](image/1.png){width=80% height=80%}
 
-```julia
-for <переменная> in <диапазон>
-    <тело цикла>
-end
+![Запуск скрипта lab_iperf3_topo.py до изменением](image/6.png){width=80% height=80%}
 
-```
+![Проверка корректность отработки после изменением](image/7.png){width=80% height=80%}
 
-![Примеры операций над кортежами](image/2.png){width=70% height=70%}
+2. Изменение тополгию, скопировав в lab_iperf3_topo2.py, указание на использование ограничения производительности и изоляции, изменение функцию задания параметров виртуального хоста h1 и h2 и изменение функцию параметров соединения между хостом h1 и коммутатором s3:
 
-##  Условные выражения
+![Скрипт lab_iperf3_topo2.py](image/20.png){width=80% height=80%}
 
-Синтаксис условных выражений с ключевым словом:
+- Запуск на отработку сначала скрипт lab_iperf3_topo2.py, затем lab_iperf3_topo.py
 
-```julia
-if <условие 1>
-    <действие 1>
-elseif <условие 2>
-    <действие 2>
-else
-    <действие 3>
-end
-```
+![Запуск скрипт создания топологии lab_iperf3_topo2.py](image/8.png){width=80% height=80%}
 
-## Функции
+![Запуск скрипт создания топологии lab_iperf3_topo.py](image/9.png){width=80% height=80%}
 
+3. Построение графика: изменение топологии, копирование в lab_iperf3.py , изменение параметров, создание Makefile для запуска всего эксперимента:
 
-![Примеры и операции над множествами](image/4.png){width=70% height=70%}
+![Копирование в lab_iperf3.py](image/10.png){width=80% height=80%}
 
-![Примеры и операции над множествами](image/5.png){width=70% height=70%}
+![Скрипт lab_iperf3.py](image/3.png){width=80% height=80%}
 
-## Сторонние библиотеки (пакеты) в Julia
+![Запуск скрипта lab_iperf3.py](image/11.png){width=80% height=80%}
 
-![Примеры операций над массивами](image/11.png){width=70% height=70%}
+![Создание Makefile](image/4.png){width=80% height=80%}
 
-##  Задания для самостоятельного выполнения
+- Проверка корректность отработки Makefile
 
+![Проверка корректность отработки Makefile](image/12.png){width=80% height=80%}
 
+4. Результат построения графика
+
+![Окно перегрузки](image/17.png){width=80% height=80%}
+
+![Повторная передача](image/18.png){width=80% height=80%}
+
+![Время приема-передачи](image/14.png){width=80% height=80%}
+
+![Отклонение времени приема-передачи](image/15.png){width=80% height=80%}
+
+![Пропускная способность](image/19.png){width=80% height=80%}
+
+![Максимальная единица передачи](image/13.png){width=80% height=80%}
+
+![Количество переданных байтов](image/16.png){width=80% height=80%}
 
 # Листинги  программы
 
+- Скрипт lab_iperf3_topo.py
 
+```python
+#!/usr/bin/env python
+
+"""
+This example shows how to create an empty Mininet object
+(without a topology object) and add nodes to it manually.
+"""
+
+from mininet.net import Mininet
+from mininet.node import Controller
+from mininet.cli import CLI
+from mininet.log import setLogLevel, info
+
+def emptyNet():
+
+    "Create an empty network and add nodes to it."
+
+    net = Mininet( controller=Controller, waitConnected=True )
+
+    info( '*** Adding controller\n' )
+    net.addController( 'c0' )
+
+    info( '*** Adding hosts\n' )
+    h1 = net.addHost( 'h1', ip='10.0.0.1' )
+    h2 = net.addHost( 'h2', ip='10.0.0.2' )
+
+    info( '*** Adding switch\n' )
+    s3 = net.addSwitch( 's3' )
+
+    info( '*** Creating links\n' )
+    net.addLink( h1, s3 )
+    net.addLink( h2, s3 )
+
+    info( '*** Starting network\n')
+    net.start()
+
+    print("Host", h1.name, "has IP address", h1.IP(), 
+    "and MAC address", h1.MAC())
+    print("Host", h2.name, "has IP address", h2.IP(), 
+    "and MAC address", h2.MAC())
+
+    info( '*** Running CLI\n' )
+    CLI( net )
+
+    info( '*** Stopping network' )
+    net.stop()
+
+if __name__ == '__main__':
+    setLogLevel( 'info' )
+    emptyNet()
+```
+
+- Скрипт lab_iperf3_topo2.py
+
+```python
+#!/usr/bin/env python
+
+"""
+This example shows how to create an empty Mininet object
+(without a topology object) and add nodes to it manually.
+"""
+
+from mininet.net import Mininet
+from mininet.node import Controller
+from mininet.cli import CLI
+from mininet.log import setLogLevel, info
+from mininet.node import CPULimitedHost
+from mininet.link import TCLink
+
+def emptyNet():
+
+    "Create an empty network and add nodes to it."
+
+    net = Mininet( controller=Controller, waitConnected=True, 
+    host = CPULimitedHost, link = TCLink )
+
+    info( '*** Adding controller\n' )
+    net.addController( 'c0' )
+
+    info( '*** Adding hosts\n' )
+    h1 = net.addHost( 'h1', ip='10.0.0.1', cpu=50 )
+    h2 = net.addHost( 'h2', ip='10.0.0.2', cpu=45 )
+
+    info( '*** Adding switch\n' )
+    s3 = net.addSwitch( 's3' )
+
+    info( '*** Creating links\n' )
+    net.addLink( h1, s3, bw=10, delay='5ms', max_queue_size=1000, 
+    loss=10, use_htb=True )
+    net.addLink( h2, s3 )
+
+    info( '*** Starting network\n')
+    net.start()
+
+    print("Host", h1.name, "has IP address", h1.IP(), 
+    "and MAC address", h1.MAC())
+    print("Host", h2.name, "has IP address", h2.IP(), 
+    "and MAC address", h2.MAC())
+
+    info( '*** Running CLI\n' )
+    CLI( net )
+
+    info( '*** Stopping network' )
+    net.stop()
+
+if __name__ == '__main__':
+    setLogLevel( 'info' )
+    emptyNet()
+```
+
+- Скрипт lab_iperf3.py
+
+```python
+#!/usr/bin/env python
+
+"""
+This example shows how to create an empty Mininet object
+(without a topology object) and add nodes to it manually.
+"""
+import time
+from mininet.net import Mininet
+from mininet.node import Controller
+from mininet.cli import CLI
+from mininet.log import setLogLevel, info
+from mininet.node import CPULimitedHost
+from mininet.link import TCLink
+
+def emptyNet():
+
+    "Create an empty network and add nodes to it."
+
+    net = Mininet( controller=Controller, waitConnected=True, 
+    host = CPULimitedHost, link = TCLink )
+
+    info( '*** Adding controller\n' )
+    net.addController( 'c0' )
+
+    info( '*** Adding hosts\n' )
+    h1 = net.addHost( 'h1', ip='10.0.0.1')
+    h2 = net.addHost( 'h2', ip='10.0.0.2')
+
+    info( '*** Adding switch\n' )
+    s3 = net.addSwitch( 's3' )
+
+    info( '*** Creating links\n' )
+    net.addLink( h1, s3, bw=100, delay='75ms')
+    net.addLink( h2, s3 )
+
+    info( '*** Starting network\n')
+    net.start()
+
+    info( '*** Traffic generation\n' )
+    h2.cmdPrint( 'iperf3 -s -D -1' )
+    time.sleep(10) # Wait 10 seconds for servers to start
+    h1.cmdPrint( 'iperf3 -c', h2.IP(), '-J > iperf_result.json' )
+
+    print("Host", h1.name, "has IP address", h1.IP(), 
+    "and MAC address", h1.MAC())
+    print("Host", h2.name, "has IP address", h2.IP(), 
+    "and MAC address", h2.MAC())
+
+    info( '*** Running CLI\n' )
+    CLI( net )
+
+    info( '*** Stopping network' )
+    net.stop()
+
+if __name__ == '__main__':
+    setLogLevel( 'info' )
+    emptyNet()
+```
 
 # Вывод
 
-Освоила применение циклов функций и сторонних для Julia пакетов для решения задач линейной алгебры и работы с матрицами.
+Я познакомилась  с инструментом для измерения пропускной способности сети в режиме реального времени — iPerf3, а также получение навыков проведения воспроизводимого эксперимента по измерению пропускной способности моделируемой сети в среде Mininet.
+
