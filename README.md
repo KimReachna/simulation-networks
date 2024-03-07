@@ -166,7 +166,7 @@ by the node sender. The recipient node then simply discards the packet. As a res
 segment and will consider it a lost segment. The TCP sender process
 will subsequently reduce the congestion window and throughput
 by half.
-***Duplicate packages:*** a state where multiple copies of a packet
+- ***Duplicate packages:*** a state where multiple copies of a packet
 are present on the network and are received by the destination. Packet duplication
 is the result of retransmissions when the sending node
 retransmits unacknowledged (NACK) packets.
