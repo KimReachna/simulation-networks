@@ -22,6 +22,7 @@ as to gain skills in conducting an interactive experiment on measuring
 the bandwidth of a simulated network in the Mininet environment.
 
 ***Preliminary information***:
+
 **iperf3** - It is an open-source cross-platform client-server application that can be used to measure throughput between two end devices.
 
 iPerf3 can work with the TCP, UDP, and SCTP transport protocols:
@@ -52,6 +53,7 @@ and interpret the results.
 Purpose of the work: The main goal of the work is to get acquainted with the tool for measuring network bandwidth in real time — iPerf3, as well as to gain skills in conducting a reproducible experiment on measuring the bandwidth of a simulated network in the Mininet environment.
 
 ***Preliminary information***:
+
 #### API Mininet
 - The Application Programming Interface (API — is a special protocol for the interaction of computer programs that allows you to use the functions of one application inside another.
 - The Mininet API is built on three main levels:
@@ -75,6 +77,7 @@ experiments on measuring latency and its jitter (jitter) in a simulated network
 in the Mininet environment.
 
 ***Preliminary information***:
+
 - NETEM is a Linux network emulator used for testing
 the performance of real client-server applications in a virtual network.
 The virtual network in this case is a laboratory environment for
@@ -132,6 +135,7 @@ of packets during data transmission. These parameters affect the performance
 of protocols and networks.
 
 ***Preliminary information:***
+
 In addition to latency, many global and local area networks are affectedloss, reordering, corruption, and duplication of packets.
 - ***Packet Loss***: a condition that occurs when a packet passing through
 the network does not reach its destination. Packet loss can have a big
@@ -204,5 +208,78 @@ in modeling and studying traffic behavior through
 interactive and reproducible experiments in Mininet.
 
 ***Preliminary information:***
+
+***Token Buckets Filter(TBF)***: It is an algorithm used in
+packet-switched networks to limit bandwidth and peak
+traffic load (Figure 6.1). Passing incoming messages to the system queue (queque)
+data packets are processed if a special buffer (bucket)
+contains the required number of transmission permissions (or tokens). Tokens can be
+represented as packets or a number of bytes arriving in
+a fixed-size buffer (bucket) at a fixed rate.
+
+![](https://sun9-75.userapi.com/impg/YmUy7rzQ_Rh_QBsI0R6klOkiR_GbdBWyxgKSMA/wq8810hz9qc.jpg?size=649x242&quality=96&sign=90964aa531e17308d8ac428b6f2d1a50&type=album)
+
+- The maximum average speed of sending a stream of data from the system queue
+depends on the speed of arrival in the specialized buffer
+of transmission permissions data units. The next packet can only be sent
+if it receives enough permissions to transmit data
+that is larger or equal to the packet size. If the transfer permissions
+are sufficient, then the required number of tokens is removed from the specialized buffers, and the data packet is sent. If a packet arrives in the system queue
+and does not have the required number of permissions, then tokens are not
+removed from the specialized buffer, and the data packet itself can be
+discarded, queued, or transmitted, but marked as non-compliant
+with the transmission conditions.
+- The TBF discipline is implemented as a buffer (queue), which is constantly
+filled with tokens at a given rate. The most important parameter of the buffer
+is its size, which determines the number of stored tokens. 
+
+![](https://sun9-46.userapi.com/impg/tLhmxs_5dY_ST8866NYF16mYbOATqIk-ZSTozA/jII5wTCzzFE.jpg?size=667x266&quality=96&sign=bfc643dc287384f6a1509749703159c1&type=album)
+
+- If data arrives at a rate equal to the rate of incoming tokens, then
+each packet has a corresponding token and passes the queue without delay.
+If data arrives at a rate lower than the token arrival rate,
+then only a part of the existing tokens will be destroyed, so they will
+accumulate up to the size of a specialized buffer. Further, the accumulated
+tokens can be used in case of spikes, to transfer data at a speed
+exceeding the speed of the remaining tokens.
+- If data arrives faster than tokens, then the buffer will eventually
+run out of tokens, which will cause the discipline to suspend data transmission. This
+situation is called "overshoot". If the packets continue to arrive, the
+tokens start to be destroyed. This situation allows you to administratively
+limit the available bandwidth.
+- The accumulated tokens allow you to skip short bursts, but if
+you exceed them for a long time, the packets will be delayed, and in extreme cases, they will be
+destroyed.
+- The TBF algorithm has the burstiness property when
+the bucket is completely full (i.e., no packages consume tokens) and new
+packages will consume tokens immediately, without restrictions. The splash is defined
+as the number of tokens that can fit in the bucket, or as the size of the bucket.(capacity) of the bucket. To ensure that spikes are limited and controlledwhen packets arrive, another bucket is formed, with a size equal to the maximum transmitted data element (Maximum Transmission Unit, MTU). The processing speed of this buffer is much higher than the original one (peak rate).
+
+Basic tbf syntax used with tc on Linux:
+```
+tc qdisc [add | ...] dev [dev_id] root tbf limit [BYTES] burst [BYTES] rate [BPS] [mtu BYTES] [peakrate BPS] [latency TIME]
+```
+
+where:
+- **tc**: Linux traffic management tool;
+- **qdisc**: Queue discipline (qdisc), which is a set of rules,defining the order in which packets coming
+from the IP protocol output are served;
+- **[add / del | replace | change | show]**: operation on qdisc;
+- **dev [dev_id]**: sets the interface;
+- **tbf**: indicates that the Token Bucket Filter algorithm is used;
+- **limit [BYTES]**: size of the packet queue in bytes;
+- **burst [BYTES]**: the number of bytes that can fit in the bucket;
+- **rate [BPS]**: the data transfer rate, determined by the frequency at whichtokens are added to the shopping cart;
+- **mtu [BYTES]**: maximum transmission unit in bytes;
+- **peakrate [BPS]** (peak speed [bps]): maximum transmission speed-chi of the package;
+- **latency [TIME]**: the maximum waiting time for a packet in the queue
+
+**Tasks:**
+1. Define a topology (Figure 6.3) consisting of two hosts and two switcheswith the default mininet network assigned 10.0.0.0 / 8.
+2. Conduct interactive experiments to limit the bandwidth of open source software-network connectivity using TBF in an emulated WAN.
+3. Independently implement reproducible application recommendationsTBF to limit the bandwidth. Create appropriate
+graphs.
+
+
 
 
